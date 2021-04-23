@@ -1,9 +1,12 @@
+import 'package:chat/helpers/mostrar_alerta.dart';
+import 'package:chat/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/widgets/boton_azul.dart';
 import 'package:chat/widgets/custom_input.dart';
 import 'package:chat/widgets/labels.dart';
 import 'package:chat/widgets/logo.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class RegisterPage extends StatelessWidget {
   @override
@@ -12,16 +15,27 @@ class RegisterPage extends StatelessWidget {
       backgroundColor: Color(0xffF2F2F2),
       body: SafeArea(
         child: SingleChildScrollView(
-        physics: BouncingScrollPhysics(), //Rebota cuando se hace scroll
-          child: Container( // para que entre todos los widgets en la pantalla
-            height: MediaQuery.of(context).size.height * 0.9, // 90 % de la pantalla 
+          physics: BouncingScrollPhysics(), //Rebota cuando se hace scroll
+          child: Container(
+            // para que entre todos los widgets en la pantalla
+            height:
+                MediaQuery.of(context).size.height * 0.9, // 90 % de la pantalla
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Logo(titulo: 'Registro',),
+                  Logo(
+                    titulo: 'Registro',
+                  ),
                   _Form(),
-                  Labels(ruta:'login',titulo: '¿Ya tienes una cuenta',subTitulo: 'Ingresa ahora!',),
-                  Text('Terminos y condiciones de uso',style: TextStyle(fontWeight: FontWeight.w200),),
+                  Labels(
+                    ruta: 'login',
+                    titulo: '¿Ya tienes una cuenta',
+                    subTitulo: 'Ingresa ahora!',
+                  ),
+                  Text(
+                    'Terminos y condiciones de uso',
+                    style: TextStyle(fontWeight: FontWeight.w200),
+                  ),
                 ]),
           ),
         ),
@@ -37,17 +51,19 @@ class _Form extends StatefulWidget {
 
 class __FormState extends State<_Form> {
   final nameCtrl = TextEditingController();
-  final emailCtrl  = TextEditingController();
-  final passCtrl   = TextEditingController();
+  final emailCtrl = TextEditingController();
+  final passCtrl = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: EdgeInsets.only(top: 40),
       padding: EdgeInsets.symmetric(horizontal: 50),
       child: Column(
         children: <Widget>[
           CustomInput(
-            icon: Icons.perm_identity, 
+            icon: Icons.perm_identity,
             placeholder: 'Nombre',
             keyboardType: TextInputType.text,
             textController: nameCtrl,
@@ -65,11 +81,24 @@ class __FormState extends State<_Form> {
             isPassword: true,
           ),
           BotonAzul(
-            text: 'Ingrese',
-            onPressed: () {
-              print(emailCtrl.text);
-              print(passCtrl.text);
-            },
+            text: 'Crear Cuenta',
+            onPressed: authService.autenticando
+                ? null
+                : () async {
+                    print(nameCtrl.text);
+                    print(emailCtrl.text);
+                    print(passCtrl.text);
+                    final registroOk = await authService.register(
+                        nameCtrl.text.trim(),
+                        emailCtrl.text.trim(),
+                        passCtrl.text.trim());
+                    if (registroOk == true) {
+                      //TODO: Conectar socket server
+                      Navigator.pushReplacementNamed(context, 'usuarios');
+                    } else {
+                      mostrarAlerta(context, 'Registro Incorrecto', registroOk);
+                    }
+                  },
           )
         ],
       ),
